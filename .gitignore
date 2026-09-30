@@ -14,4 +14,6 @@ build/
 .DS_Store
 client/dist/
 client/build/
+client/installer_output/
 *.exe
+*.xlsx
