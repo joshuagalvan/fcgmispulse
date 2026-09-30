@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+.env
+*.db
+*.db-wal
+*.db-shm
+backend/data/
+dist/
+build/
+*.spec.bak
+.DS_Store
+client/dist/
+client/build/
+*.exe
