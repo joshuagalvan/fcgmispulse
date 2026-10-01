@@ -260,6 +260,12 @@ QMenuBar::item:selected {{
 QMenu {{
     background: {CARD};
     border: 1px solid {BORDER};
+    padding: 4px;
+}}
+
+QMenu::item {{
+    padding: 7px 28px 7px 14px;
+    border-radius: 4px;
 }}
 
 QMenu::item:selected {{

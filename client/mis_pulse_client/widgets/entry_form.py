@@ -148,7 +148,11 @@ class EntryForm(QWidget):
         content = QWidget()
         content.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         content_layout = QVBoxLayout(content)
-        content_layout.setContentsMargins(0, 0, 0, 0)
+        # Right margin only: breathing room between the fields and the
+        # scrollbar, which otherwise sits flush against them -- the table
+        # views get this for free from their own border/padding, but a
+        # frameless scroll area doesn't have one.
+        content_layout.setContentsMargins(0, 0, 18, 0)
         content_layout.addWidget(self.heading)
         content_layout.addSpacing(4)
 
