@@ -24,6 +24,7 @@ from ..async_utils import run_async
 from ..theme import TEXT
 from .autocomplete_combobox import AutocompleteComboBox
 from .multi_select_combobox import MultiSelectComboBox
+from .time_picker_edit import TimePickerEdit
 
 _FIELD_MIN_WIDTH = 380
 _FORM_MAX_WIDTH = 760
@@ -101,9 +102,9 @@ class EntryForm(QWidget):
         self.reported_by_combo = _wide(AutocompleteComboBox())
 
         now = QTime.currentTime()
-        self.time_sent_edit = QTimeEdit(now)
-        self.time_received_edit = QTimeEdit(now)
-        self.time_done_edit = QTimeEdit(now)
+        self.time_sent_edit = TimePickerEdit(now)
+        self.time_received_edit = TimePickerEdit(now)
+        self.time_done_edit = TimePickerEdit(now)
         self.time_done_checkbox = QCheckBox("Finished")
         self.time_done_checkbox.setChecked(True)
         self.time_done_checkbox.toggled.connect(self.time_done_edit.setEnabled)

@@ -152,12 +152,17 @@ QComboBox::down-arrow {{
     height: 10px;
 }}
 
-/* Unscoped on purpose: QCompleter's popup is a top-level QListView, not a
-descendant of the QComboBox it belongs to, so a "QComboBox QAbstractItemView"
-selector never matches it -- it was falling back to the OS's native (and on
-Windows, dark-mode-tinted) popup colors, rendering as unreadable dark text on
-a near-black background. */
-QAbstractItemView {{
+/* QListView, not QAbstractItemView: QCompleter's popup is a top-level
+QListView, not a descendant of the QComboBox it belongs to, so a scoped
+"QComboBox QAbstractItemView" selector never matches it -- it was falling
+back to the OS's native (and on Windows, dark-mode-tinted) popup colors,
+rendering as unreadable dark text on a near-black background. QAbstractItemView
+is the base class of QTableView too though, and styling its ::item sub-control
+broadly took over painting QCalendarWidget's date grid from whatever custom
+delegate normally draws "other month"/today cells, blanking them out -- scoping
+to QListView covers QComboBox/QCompleter popups (what actually needed fixing)
+without touching table views at all. */
+QListView {{
     background: {CARD};
     color: {TEXT};
     border: 1px solid {BORDER};
@@ -167,16 +172,16 @@ QAbstractItemView {{
     selection-color: {TEXT};
 }}
 
-QAbstractItemView::item {{
+QListView::item {{
     padding: 5px 8px;
     color: {TEXT};
 }}
 
-QAbstractItemView::item:hover {{
+QListView::item:hover {{
     background: {BROWN_LIGHT};
 }}
 
-QAbstractItemView::item:selected {{
+QListView::item:selected {{
     background: {GOLD_LIGHT};
     color: {TEXT};
 }}

@@ -67,6 +67,10 @@ class _LookupManagerPanel(QWidget):
         action_row.addStretch(1)
         layout.addLayout(action_row)
 
+        self.status_label = QLabel("")
+        self.status_label.setStyleSheet("color: #6B3F2A; font-weight: 600;")
+        layout.addWidget(self.status_label)
+
         if needs_brand:
             run_async(self.client.brands, on_success=self._on_brands_loaded)
         else:
@@ -115,12 +119,13 @@ class _LookupManagerPanel(QWidget):
             value,
             self.location_type,
             self._current_brand if self.needs_brand else None,
-            on_success=lambda _row: self._on_added(),
+            on_success=lambda _row: self._on_added(value),
             on_error=lambda msg: QMessageBox.critical(self, "Could not add", msg),
         )
 
-    def _on_added(self):
+    def _on_added(self, value: str):
         self.new_value_edit.clear()
+        self.status_label.setText(f'Added "{value}".')
         self.refresh()
 
     def _rename(self):
@@ -136,9 +141,13 @@ class _LookupManagerPanel(QWidget):
             self.client.update_lookup,
             item.data(_ID_ROLE),
             value=new_value.strip(),
-            on_success=lambda _row: self.refresh(),
+            on_success=lambda _row: self._on_renamed(current_text, new_value.strip()),
             on_error=lambda msg: QMessageBox.critical(self, "Could not rename", msg),
         )
+
+    def _on_renamed(self, old_value: str, new_value: str):
+        self.status_label.setText(f'Renamed "{old_value}" to "{new_value}".')
+        self.refresh()
 
     def _toggle_active(self):
         item = self._selected_item()
@@ -146,13 +155,20 @@ class _LookupManagerPanel(QWidget):
             QMessageBox.information(self, "No selection", "Select an item first.")
             return
         currently_inactive = item.data(_INACTIVE_ROLE)
+        value = item.text().replace("  (inactive)", "")
+        will_be_active = bool(currently_inactive)
         run_async(
             self.client.update_lookup,
             item.data(_ID_ROLE),
-            is_active=bool(currently_inactive),
-            on_success=lambda _row: self.refresh(),
+            is_active=will_be_active,
+            on_success=lambda _row: self._on_toggled(value, will_be_active),
             on_error=lambda msg: QMessageBox.critical(self, "Could not update", msg),
         )
+
+    def _on_toggled(self, value: str, is_now_active: bool):
+        verb = "Restored" if is_now_active else "Deactivated"
+        self.status_label.setText(f'{verb} "{value}".')
+        self.refresh()
 
 
 class _SingleLookupDialog(QDialog):
