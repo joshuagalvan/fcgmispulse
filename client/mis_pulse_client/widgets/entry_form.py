@@ -1,10 +1,11 @@
-from PySide6.QtCore import QDate, QTime, Signal
-from PySide6.QtGui import QKeySequence, QShortcut
+from PySide6.QtCore import QDate, Qt, QTime, Signal
+from PySide6.QtGui import QColor, QKeySequence, QShortcut, QTextCharFormat
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDateEdit,
     QFormLayout,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -19,6 +20,7 @@ from PySide6.QtWidgets import (
 
 from .. import choices
 from ..async_utils import run_async
+from ..theme import TEXT
 from .autocomplete_combobox import AutocompleteComboBox
 from .multi_select_combobox import MultiSelectComboBox
 
@@ -45,6 +47,31 @@ def _wide(widget):
     return widget
 
 
+def _section(layout: QVBoxLayout, title: str, first: bool = False):
+    if not first:
+        divider = QFrame()
+        divider.setObjectName("sectionDivider")
+        divider.setFrameShape(QFrame.HLine)
+        layout.addSpacing(14)
+        layout.addWidget(divider)
+        layout.addSpacing(14)
+    label = QLabel(title.upper())
+    label.setObjectName("sectionHeading")
+    layout.addWidget(label)
+    layout.addSpacing(8)
+
+
+def _style_calendar(date_edit: QDateEdit):
+    # QCalendarWidget colors Sat/Sun red via code, not stylesheet -- QSS
+    # alone can't override it, which is why it still showed red even after
+    # the rest of the popup picked up the theme.
+    calendar = date_edit.calendarWidget()
+    normal = QTextCharFormat()
+    normal.setForeground(QColor(TEXT))
+    calendar.setWeekdayTextFormat(Qt.Saturday, normal)
+    calendar.setWeekdayTextFormat(Qt.Sunday, normal)
+
+
 class EntryForm(QWidget):
     saved = Signal(dict)
     status_message = Signal(str)
@@ -60,6 +87,7 @@ class EntryForm(QWidget):
 
         self.date_edit = _wide(QDateEdit(QDate.currentDate()))
         self.date_edit.setCalendarPopup(True)
+        _style_calendar(self.date_edit)
 
         self.location_type_combo = _wide(QComboBox())
         self.location_type_combo.addItems(choices.LOCATION_TYPES)
@@ -108,32 +136,57 @@ class EntryForm(QWidget):
         self.type_of_support_combo = _wide(QComboBox())
         self.type_of_support_combo.addItems(choices.TYPE_OF_SUPPORT)
 
-        form = QFormLayout()
-        form.setRowWrapPolicy(QFormLayout.DontWrapRows)
-        form.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
-        form.setHorizontalSpacing(16)
-        form.setVerticalSpacing(10)
-        form.addRow("Date", self.date_edit)
-        form.addRow("Store or Department?", self.location_type_combo)
-        self._brand_row_label = "Brand"
-        form.addRow(self._brand_row_label, self.brand_combo)
-        form.addRow("Store / Department", self.store_department_combo)
-        form.addRow("Reported By", self.reported_by_combo)
-        form.addRow("Time Sent", self.time_sent_edit)
-        form.addRow("Time Received", self.time_received_edit)
-        form.addRow("Time Done", time_done_row)
-        form.addRow("MIS Personnel", self.mis_personnel_combo)
-        form.addRow("Problem", self.problem_edit)
-        form.addRow("Findings / Cause", self.findings_edit)
-        form.addRow("Action Taken", self.action_taken_edit)
-        form.addRow("Remarks", self.remarks_combo)
-        form.addRow("Task", self.task_combo)
-        form.addRow("Task Remarks", self.task_remarks_edit)
-        form.addRow("Acknowledged By", self.acknowledged_by_edit)
-        form.addRow("Area Manager / Head", self.area_manager_combo)
-        form.addRow("Type", self.type_combo)
-        form.addRow("Type of Support", self.type_of_support_combo)
-        self._form = form
+        def _form_layout() -> QFormLayout:
+            f = QFormLayout()
+            f.setRowWrapPolicy(QFormLayout.DontWrapRows)
+            f.setFieldGrowthPolicy(QFormLayout.ExpandingFieldsGrow)
+            f.setHorizontalSpacing(16)
+            f.setVerticalSpacing(10)
+            return f
+
+        # Cap the form to a comfortable reading width rather than letting
+        # every field sprawl edge-to-edge on a wide window -- but give it a
+        # stretch factor too, or it would just shrink to its minimum size
+        # instead of actually growing to fill that cap.
+        content = QWidget()
+        content.setMaximumWidth(_FORM_MAX_WIDTH)
+        content.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        content_layout = QVBoxLayout(content)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.addWidget(self.heading)
+        content_layout.addSpacing(4)
+
+        _section(content_layout, "Where & When", first=True)
+        location_form = _form_layout()
+        location_form.addRow("Date", self.date_edit)
+        location_form.addRow("Store or Department?", self.location_type_combo)
+        location_form.addRow("Brand", self.brand_combo)
+        location_form.addRow("Store / Department", self.store_department_combo)
+        location_form.addRow("Reported By", self.reported_by_combo)
+        location_form.addRow("Time Sent", self.time_sent_edit)
+        location_form.addRow("Time Received", self.time_received_edit)
+        location_form.addRow("Time Done", time_done_row)
+        content_layout.addLayout(location_form)
+        self._form = location_form
+
+        _section(content_layout, "The Issue")
+        issue_form = _form_layout()
+        issue_form.addRow("MIS Personnel", self.mis_personnel_combo)
+        issue_form.addRow("Problem", self.problem_edit)
+        issue_form.addRow("Findings / Cause", self.findings_edit)
+        issue_form.addRow("Action Taken", self.action_taken_edit)
+        issue_form.addRow("Remarks", self.remarks_combo)
+        issue_form.addRow("Task", self.task_combo)
+        issue_form.addRow("Task Remarks", self.task_remarks_edit)
+        content_layout.addLayout(issue_form)
+
+        _section(content_layout, "Sign-off")
+        signoff_form = _form_layout()
+        signoff_form.addRow("Acknowledged By", self.acknowledged_by_edit)
+        signoff_form.addRow("Area Manager / Head", self.area_manager_combo)
+        signoff_form.addRow("Type", self.type_combo)
+        signoff_form.addRow("Type of Support", self.type_of_support_combo)
+        content_layout.addLayout(signoff_form)
 
         self.save_button = QPushButton("Save Entry  (Ctrl+S)")
         self.save_button.setObjectName("primaryButton")
@@ -146,19 +199,7 @@ class EntryForm(QWidget):
         buttons.addWidget(self.new_button)
         buttons.addStretch(1)
 
-        # Cap the form to a comfortable reading width rather than letting
-        # every field sprawl edge-to-edge on a wide window -- but give it a
-        # stretch factor too, or it would just shrink to its minimum size
-        # instead of actually growing to fill that cap.
-        content = QWidget()
-        content.setMaximumWidth(_FORM_MAX_WIDTH)
-        content.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        content_layout = QVBoxLayout(content)
-        content_layout.setContentsMargins(0, 0, 0, 0)
-        content_layout.addWidget(self.heading)
-        content_layout.addSpacing(6)
-        content_layout.addLayout(form)
-        content_layout.addSpacing(6)
+        content_layout.addSpacing(18)
         content_layout.addLayout(buttons)
 
         centered = QHBoxLayout()
