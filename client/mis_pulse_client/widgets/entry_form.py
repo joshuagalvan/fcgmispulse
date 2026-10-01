@@ -27,7 +27,6 @@ from .multi_select_combobox import MultiSelectComboBox
 from .time_picker_edit import TimePickerEdit
 
 _FIELD_MIN_WIDTH = 380
-_FORM_MAX_WIDTH = 760
 
 
 def _short_text_edit() -> QTextEdit:
@@ -146,12 +145,7 @@ class EntryForm(QWidget):
             f.setVerticalSpacing(10)
             return f
 
-        # Cap the form to a comfortable reading width rather than letting
-        # every field sprawl edge-to-edge on a wide window -- but give it a
-        # stretch factor too, or it would just shrink to its minimum size
-        # instead of actually growing to fill that cap.
         content = QWidget()
-        content.setMaximumWidth(_FORM_MAX_WIDTH)
         content.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         content_layout = QVBoxLayout(content)
         content_layout.setContentsMargins(0, 0, 0, 0)
@@ -209,26 +203,19 @@ class EntryForm(QWidget):
         # scroll area is to squeeze every row down towards zero height
         # instead (which is what produced the "compressed/garbled text"
         # look: the text was still there, just rendered into a couple of
-        # pixels of row height), rather than cleanly scrolling.
-        #
-        # The scroll area itself (not just `content`) is capped to the same
-        # max width, or its viewport -- and so its scrollbar -- would still
-        # span the full window, leaving a dead gap between the card's right
-        # edge and the scrollbar off at the window's edge.
+        # pixels of row height), rather than cleanly scrolling. No width
+        # cap, and no stretch beside it either -- fills the tab fully,
+        # since capping it just traded "fields too narrow" for "dead
+        # space beside the form," which wasn't wanted either.
         scroll = QScrollArea()
         scroll.setWidget(content)
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.NoFrame)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        scroll.setMaximumWidth(_FORM_MAX_WIDTH)
-
-        centered = QHBoxLayout()
-        centered.addWidget(scroll, 1)
-        centered.addStretch(1)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 20, 24, 20)
-        layout.addLayout(centered)
+        layout.addWidget(scroll)
 
         QShortcut(QKeySequence("Ctrl+S"), self, activated=self._save)
 
