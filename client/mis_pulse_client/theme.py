@@ -62,6 +62,15 @@ QMainWindow, QDialog {{
     background: {BG};
 }}
 
+QScrollArea {{
+    background: transparent;
+    border: none;
+}}
+
+QScrollArea > QWidget > QWidget {{
+    background: transparent;
+}}
+
 QWidget#formHeading {{
     font-size: 19px;
     font-weight: 600;
