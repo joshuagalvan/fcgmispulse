@@ -8,5 +8,5 @@ version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = ["openpyxl>=3.1"]
 
-[tool.setuptools]
-packages = ["mis_pulse_export"]
+[tool.setuptools.packages.find]
+include = ["mis_pulse_export*"]
