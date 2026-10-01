@@ -90,6 +90,12 @@ class _LookupManagerPanel(QWidget):
         run_async(self.client.manage_list, self.kind, on_success=self._on_loaded)
 
     def _on_loaded(self, rows: list[dict]):
+        # "location" covers both Stores and Departments (distinguished by
+        # location_type), so Departments must filter it explicitly too --
+        # without this it showed all ~320 of both mixed together instead
+        # of just its own ~30.
+        if self.location_type is not None:
+            rows = [r for r in rows if r.get("location_type") == self.location_type]
         if self.needs_brand:
             rows = [r for r in rows if r.get("brand") == self._current_brand]
         self.list_widget.clear()

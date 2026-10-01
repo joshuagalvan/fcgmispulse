@@ -204,27 +204,31 @@ class EntryForm(QWidget):
         content_layout.addSpacing(18)
         content_layout.addLayout(buttons)
 
-        centered = QHBoxLayout()
-        centered.addWidget(content, 1)
-        centered.addStretch(1)
-
         # Without this, 18+ fields across three sections can be taller
         # than the window -- Qt's answer to "not enough room" without a
         # scroll area is to squeeze every row down towards zero height
         # instead (which is what produced the "compressed/garbled text"
         # look: the text was still there, just rendered into a couple of
         # pixels of row height), rather than cleanly scrolling.
-        scroll_content = QWidget()
-        scroll_content.setLayout(centered)
+        #
+        # The scroll area itself (not just `content`) is capped to the same
+        # max width, or its viewport -- and so its scrollbar -- would still
+        # span the full window, leaving a dead gap between the card's right
+        # edge and the scrollbar off at the window's edge.
         scroll = QScrollArea()
-        scroll.setWidget(scroll_content)
+        scroll.setWidget(content)
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.NoFrame)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setMaximumWidth(_FORM_MAX_WIDTH)
+
+        centered = QHBoxLayout()
+        centered.addWidget(scroll, 1)
+        centered.addStretch(1)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(24, 20, 24, 20)
-        layout.addWidget(scroll)
+        layout.addLayout(centered)
 
         QShortcut(QKeySequence("Ctrl+S"), self, activated=self._save)
 

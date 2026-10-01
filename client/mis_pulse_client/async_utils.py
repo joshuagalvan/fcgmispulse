@@ -29,11 +29,29 @@ class _Worker(QRunnable):
             self.signals.success.emit(result)
 
 
+_in_flight: set = set()  # keeps workers alive for the duration of the task --
+# see run_async's docstring note below for why this exists.
+
+
 def run_async(fn, *args, on_success=None, on_error=None, **kwargs) -> _Worker:
+    """QThreadPool owns the C++ side of a QRunnable, but nothing keeps the
+    *Python* wrapper (or its .signals QObject) alive once run_async returns,
+    since callers never hold onto the returned worker. Python's GC can and
+    does collect it before the background thread finishes, which silently
+    drops the success/error signal instead of raising anything -- the
+    callback just never fires. Tracking in-flight workers here keeps a
+    strong reference until they're done."""
     worker = _Worker(fn, args, kwargs)
+    _in_flight.add(worker)
+
+    def _cleanup():
+        _in_flight.discard(worker)
+
     if on_success:
         worker.signals.success.connect(on_success)
     if on_error:
         worker.signals.error.connect(on_error)
+    worker.signals.success.connect(_cleanup)
+    worker.signals.error.connect(_cleanup)
     QThreadPool.globalInstance().start(worker)
     return worker

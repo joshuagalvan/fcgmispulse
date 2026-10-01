@@ -37,11 +37,11 @@ class MainWindow(QMainWindow):
 
     def _build_menu(self):
         manage_menu = self.menuBar().addMenu("&Manage")
-        stores_action = manage_menu.addAction("Manage Stores...")
+        stores_action = manage_menu.addAction("Manage Stores")
         stores_action.triggered.connect(lambda: self._open_manage(ManageStoresDialog))
-        departments_action = manage_menu.addAction("Manage Departments...")
+        departments_action = manage_menu.addAction("Manage Departments")
         departments_action.triggered.connect(lambda: self._open_manage(ManageDepartmentsDialog))
-        area_managers_action = manage_menu.addAction("Manage Area Managers...")
+        area_managers_action = manage_menu.addAction("Manage Area Managers")
         area_managers_action.triggered.connect(
             lambda: self._open_manage(ManageAreaManagersDialog)
         )
