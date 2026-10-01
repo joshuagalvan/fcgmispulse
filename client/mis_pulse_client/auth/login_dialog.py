@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
+from .. import server_config
 from ..api_client import ApiClient, ApiError
 from ..async_utils import run_async
 from ..config import APP_NAME
@@ -38,9 +39,13 @@ class LoginDialog(QDialog):
         self.password_edit.setEchoMode(QLineEdit.Password)
         self.password_edit.returnPressed.connect(self._attempt_login)
 
+        self.server_edit = QLineEdit(server_config.load_server_url())
+        self.server_edit.setPlaceholderText("http://<server address>:8420")
+
         form = QFormLayout()
         form.addRow("Username", self.username_edit)
         form.addRow("Password", self.password_edit)
+        form.addRow("Server", self.server_edit)
 
         self.error_label = QLabel("")
         self.error_label.setStyleSheet("color: #c0392b;")
@@ -64,10 +69,15 @@ class LoginDialog(QDialog):
     def _attempt_login(self):
         username = self.username_edit.text().strip()
         password = self.password_edit.text()
+        server_url = self.server_edit.text().strip()
+        if not server_url:
+            self._show_error("Enter the server address.")
+            return
         if not username or not password:
             self._show_error("Enter your username and password.")
             return
 
+        self.api.base_url = server_url.rstrip("/")
         self.login_button.setEnabled(False)
         self.login_button.setText("Logging in...")
         run_async(
@@ -81,6 +91,7 @@ class LoginDialog(QDialog):
     def _on_login_success(self, data: dict):
         self.user = data["user"]
         token_store.save_token(data["token"])
+        server_config.save_server_url(self.api.base_url)
         self.accept()
 
     def _on_login_error(self, message: str):

@@ -2,7 +2,7 @@ import sys
 
 from PySide6.QtWidgets import QApplication, QMessageBox
 
-from . import config
+from . import config, server_config
 from .api_client import ApiClient, ApiError
 from .auth import token_store
 from .auth.login_dialog import LoginDialog
@@ -30,7 +30,7 @@ def main():
     app.setApplicationName(config.APP_NAME)
     app.setStyleSheet(STYLESHEET)
 
-    api = ApiClient(config.BASE_URL)
+    api = ApiClient(server_config.load_server_url())
 
     user = None
     saved_token = token_store.load_token()
