@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QHBoxLayout,
     QHeaderView,
+    QLabel,
     QLineEdit,
     QMessageBox,
     QPushButton,
@@ -77,11 +78,6 @@ class EntriesListView(QWidget):
         self.delete_button.setObjectName("dangerButton")
         self.delete_button.clicked.connect(self._delete_selected)
 
-        row_buttons = QHBoxLayout()
-        row_buttons.addWidget(self.edit_button)
-        row_buttons.addWidget(self.delete_button)
-        row_buttons.addStretch(1)
-
         self.export_month_combo = QComboBox()
         for value, label in _recent_months():
             self.export_month_combo.addItem(label, value)
@@ -89,16 +85,18 @@ class EntriesListView(QWidget):
         self.export_button.setObjectName("primaryButton")
         self.export_button.clicked.connect(self._export)
 
-        export_row = QHBoxLayout()
-        export_row.addWidget(self.export_month_combo)
-        export_row.addWidget(self.export_button)
-        export_row.addStretch(1)
+        action_row = QHBoxLayout()
+        action_row.addWidget(self.edit_button)
+        action_row.addWidget(self.delete_button)
+        action_row.addStretch(1)
+        action_row.addWidget(QLabel("Select month to export:"))
+        action_row.addWidget(self.export_month_combo)
+        action_row.addWidget(self.export_button)
 
         layout = QVBoxLayout(self)
         layout.addLayout(filters)
         layout.addWidget(self.table, 1)
-        layout.addLayout(row_buttons)
-        layout.addLayout(export_row)
+        layout.addLayout(action_row)
 
         self.refresh()
 

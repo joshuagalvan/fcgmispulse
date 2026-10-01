@@ -10,7 +10,6 @@ from PySide6.QtWidgets import (
     QListWidgetItem,
     QMessageBox,
     QPushButton,
-    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -156,31 +155,39 @@ class _LookupManagerPanel(QWidget):
         )
 
 
-class ManageStoresDialog(QDialog):
-    def __init__(self, client, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("Manage Stores, Departments & Area Managers")
-        self.resize(560, 640)
+class _SingleLookupDialog(QDialog):
+    """A focused dialog managing just one curated list -- split out from a
+    single tabbed dialog per request, so each is its own window/button
+    rather than three tabs buried in one place."""
 
-        tabs = QTabWidget()
-        tabs.addTab(
-            _LookupManagerPanel(client, kind="location", location_type="STORE", needs_brand=True),
-            "Stores",
-        )
-        tabs.addTab(
-            _LookupManagerPanel(
-                client, kind="location", location_type="DEPARTMENT", needs_brand=False
-            ),
-            "Departments",
-        )
-        tabs.addTab(
-            _LookupManagerPanel(client, kind="area_manager", location_type=None, needs_brand=False),
-            "Area Managers",
-        )
+    def __init__(self, title: str, panel: _LookupManagerPanel, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(title)
+        self.resize(480, 600)
 
         layout = QVBoxLayout(self)
-        layout.addWidget(tabs)
+        layout.addWidget(panel)
 
         close_button = QPushButton("Close")
         close_button.clicked.connect(self.accept)
         layout.addWidget(close_button)
+
+
+class ManageStoresDialog(_SingleLookupDialog):
+    def __init__(self, client, parent=None):
+        panel = _LookupManagerPanel(client, kind="location", location_type="STORE", needs_brand=True)
+        super().__init__("Manage Stores", panel, parent)
+
+
+class ManageDepartmentsDialog(_SingleLookupDialog):
+    def __init__(self, client, parent=None):
+        panel = _LookupManagerPanel(
+            client, kind="location", location_type="DEPARTMENT", needs_brand=False
+        )
+        super().__init__("Manage Departments", panel, parent)
+
+
+class ManageAreaManagersDialog(_SingleLookupDialog):
+    def __init__(self, client, parent=None):
+        panel = _LookupManagerPanel(client, kind="area_manager", location_type=None, needs_brand=False)
+        super().__init__("Manage Area Managers", panel, parent)

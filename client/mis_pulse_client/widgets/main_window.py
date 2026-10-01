@@ -3,7 +3,11 @@ from PySide6.QtWidgets import QMainWindow, QTabWidget
 from .. import config
 from .entries_list_view import EntriesListView
 from .entry_form import EntryForm
-from .manage_stores_dialog import ManageStoresDialog
+from .manage_stores_dialog import (
+    ManageAreaManagersDialog,
+    ManageDepartmentsDialog,
+    ManageStoresDialog,
+)
 
 
 class MainWindow(QMainWindow):
@@ -33,11 +37,17 @@ class MainWindow(QMainWindow):
 
     def _build_menu(self):
         manage_menu = self.menuBar().addMenu("&Manage")
-        manage_action = manage_menu.addAction("Stores / Departments / Area Managers...")
-        manage_action.triggered.connect(self._open_manage_stores)
+        stores_action = manage_menu.addAction("Manage Stores...")
+        stores_action.triggered.connect(lambda: self._open_manage(ManageStoresDialog))
+        departments_action = manage_menu.addAction("Manage Departments...")
+        departments_action.triggered.connect(lambda: self._open_manage(ManageDepartmentsDialog))
+        area_managers_action = manage_menu.addAction("Manage Area Managers...")
+        area_managers_action.triggered.connect(
+            lambda: self._open_manage(ManageAreaManagersDialog)
+        )
 
-    def _open_manage_stores(self):
-        dialog = ManageStoresDialog(self.client, self)
+    def _open_manage(self, dialog_cls):
+        dialog = dialog_cls(self.client, self)
         dialog.exec()
         self.entry_form.reload_lookups()
 

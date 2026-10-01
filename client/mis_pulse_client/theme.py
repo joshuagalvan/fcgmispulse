@@ -271,9 +271,22 @@ QCheckBox {{
     spacing: 6px;
 }}
 
+/* Both orientations fully specified -- leaving sub-page/add-page (the
+track on either side of the handle) unstyled made Qt's Windows style
+fall back to its native hatched/dotted pattern there, clashing with the
+custom handle. Leaving :horizontal unstyled entirely made it default to
+a thin native scrollbar that was effectively invisible against the
+theme's own background. */
 QScrollBar:vertical {{
     background: transparent;
-    width: 12px;
+    width: 14px;
+    margin: 2px;
+}}
+
+QScrollBar:horizontal {{
+    background: transparent;
+    height: 14px;
+    margin: 2px;
 }}
 
 QScrollBar::handle:vertical {{
@@ -282,12 +295,27 @@ QScrollBar::handle:vertical {{
     min-height: 24px;
 }}
 
-QScrollBar::handle:vertical:hover {{
+QScrollBar::handle:horizontal {{
+    background: {BORDER};
+    border-radius: 5px;
+    min-width: 24px;
+}}
+
+QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {{
     background: {TEXT_MUTED};
 }}
 
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
     height: 0;
+    width: 0;
+    border: none;
+    background: transparent;
+}}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical,
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {{
+    background: transparent;
 }}
 
 /* QCalendarWidget (the QDateEdit popup): Qt applies its own red weekend
