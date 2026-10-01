@@ -15,7 +15,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ..api_client import ApiClient
 from ..async_utils import run_async
 
 _INACTIVE_ROLE = Qt.UserRole
@@ -26,9 +25,9 @@ class _LookupManagerPanel(QWidget):
     """Manages one curated lookup list (Stores, Departments, or Area
     Managers). Stores are further scoped to a Brand, chosen at the top."""
 
-    def __init__(self, api: ApiClient, kind: str, location_type: str | None, needs_brand: bool):
+    def __init__(self, client, kind: str, location_type: str | None, needs_brand: bool):
         super().__init__()
-        self.api = api
+        self.client = client
         self.kind = kind
         self.location_type = location_type
         self.needs_brand = needs_brand
@@ -70,7 +69,7 @@ class _LookupManagerPanel(QWidget):
         layout.addLayout(action_row)
 
         if needs_brand:
-            run_async(self.api.brands, on_success=self._on_brands_loaded)
+            run_async(self.client.brands, on_success=self._on_brands_loaded)
         else:
             self.refresh()
 
@@ -85,7 +84,7 @@ class _LookupManagerPanel(QWidget):
         self.refresh()
 
     def refresh(self):
-        run_async(self.api.manage_list, self.kind, on_success=self._on_loaded)
+        run_async(self.client.manage_list, self.kind, on_success=self._on_loaded)
 
     def _on_loaded(self, rows: list[dict]):
         if self.needs_brand:
@@ -112,7 +111,7 @@ class _LookupManagerPanel(QWidget):
             QMessageBox.warning(self, "Pick a brand", "Choose a brand first.")
             return
         run_async(
-            self.api.add_lookup,
+            self.client.add_lookup,
             self.kind,
             value,
             self.location_type,
@@ -135,7 +134,7 @@ class _LookupManagerPanel(QWidget):
         if not ok or not new_value.strip():
             return
         run_async(
-            self.api.update_lookup,
+            self.client.update_lookup,
             item.data(_ID_ROLE),
             value=new_value.strip(),
             on_success=lambda _row: self.refresh(),
@@ -149,7 +148,7 @@ class _LookupManagerPanel(QWidget):
             return
         currently_inactive = item.data(_INACTIVE_ROLE)
         run_async(
-            self.api.update_lookup,
+            self.client.update_lookup,
             item.data(_ID_ROLE),
             is_active=bool(currently_inactive),
             on_success=lambda _row: self.refresh(),
@@ -158,24 +157,24 @@ class _LookupManagerPanel(QWidget):
 
 
 class ManageStoresDialog(QDialog):
-    def __init__(self, api: ApiClient, parent=None):
+    def __init__(self, client, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Manage Stores, Departments & Area Managers")
         self.resize(560, 640)
 
         tabs = QTabWidget()
         tabs.addTab(
-            _LookupManagerPanel(api, kind="location", location_type="STORE", needs_brand=True),
+            _LookupManagerPanel(client, kind="location", location_type="STORE", needs_brand=True),
             "Stores",
         )
         tabs.addTab(
             _LookupManagerPanel(
-                api, kind="location", location_type="DEPARTMENT", needs_brand=False
+                client, kind="location", location_type="DEPARTMENT", needs_brand=False
             ),
             "Departments",
         )
         tabs.addTab(
-            _LookupManagerPanel(api, kind="area_manager", location_type=None, needs_brand=False),
+            _LookupManagerPanel(client, kind="area_manager", location_type=None, needs_brand=False),
             "Area Managers",
         )
 

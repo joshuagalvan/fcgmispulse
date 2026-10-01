@@ -8,9 +8,9 @@ CLIENT_DIR = os.path.abspath(os.path.join(SPECPATH, ".."))
 
 datas = []
 binaries = []
-hiddenimports = ["keyring.backends.Windows"]
+hiddenimports = []
 
-for pkg in ["PySide6"]:
+for pkg in ["PySide6", "sqlalchemy", "openpyxl"]:
     pkg_datas, pkg_binaries, pkg_hidden = collect_all(pkg)
     datas += pkg_datas
     binaries += pkg_binaries

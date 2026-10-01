@@ -16,7 +16,6 @@ from PySide6.QtWidgets import (
 )
 
 from .. import choices
-from ..api_client import ApiClient
 from ..async_utils import run_async
 from ..models.entries_table_model import EntriesTableModel
 
@@ -40,9 +39,9 @@ class EntriesListView(QWidget):
     edit_requested = Signal(dict)
     status_message = Signal(str)
 
-    def __init__(self, api: ApiClient, parent=None):
+    def __init__(self, client, parent=None):
         super().__init__(parent)
-        self.api = api
+        self.client = client
 
         self.search_edit = QLineEdit()
         self.search_edit.setPlaceholderText("Search problem, store, reported by...")
@@ -108,7 +107,7 @@ class EntriesListView(QWidget):
     def refresh(self):
         status = self.task_filter_combo.currentText()
         run_async(
-            self.api.list_entries,
+            self.client.list_entries,
             search=self.search_edit.text().strip() or None,
             task=None if status == "All statuses" else status,
             limit=300,
@@ -147,7 +146,7 @@ class EntriesListView(QWidget):
         if confirm != QMessageBox.Yes:
             return
         run_async(
-            self.api.delete_entry,
+            self.client.delete_entry,
             entry["id"],
             on_success=lambda _=None: self.refresh(),
             on_error=lambda msg: QMessageBox.critical(self, "Could not delete", msg),
@@ -166,7 +165,7 @@ class EntriesListView(QWidget):
         self.export_button.setEnabled(False)
         self.export_button.setText("Exporting...")
         run_async(
-            self.api.export,
+            self.client.export,
             month_value,
             path,
             on_success=self._on_export_success,

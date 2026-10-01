@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "client/**"
+      - "shared/**"
       - ".github/workflows/build-windows.yml"
   workflow_dispatch: {}
 
@@ -25,6 +26,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install ../shared
           pip install pyinstaller
 
       - name: Build app with PyInstaller

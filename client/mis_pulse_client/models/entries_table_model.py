@@ -10,7 +10,6 @@ _COLUMNS = [
     ("task", "Task"),
     ("duration_seconds", "Duration"),
     ("type_of_support", "Type of Support"),
-    ("created_by_name", "Logged By"),
 ]
 
 

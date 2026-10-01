@@ -18,7 +18,6 @@ from PySide6.QtWidgets import (
 )
 
 from .. import choices
-from ..api_client import ApiClient
 from ..async_utils import run_async
 from .autocomplete_combobox import AutocompleteComboBox
 from .multi_select_combobox import MultiSelectComboBox
@@ -50,14 +49,11 @@ class EntryForm(QWidget):
     saved = Signal(dict)
     status_message = Signal(str)
 
-    def __init__(self, api: ApiClient, current_user_name: str | None = None, parent=None):
+    def __init__(self, client, parent=None):
         super().__init__(parent)
-        self.api = api
+        self.client = client
         self._entry_id: int | None = None
         self._version: int | None = None
-        self._default_mis_personnel = (
-            current_user_name.upper() if current_user_name else None
-        )
 
         self.heading = QLabel("New Entry")
         self.heading.setObjectName("formHeading")
@@ -91,8 +87,6 @@ class EntryForm(QWidget):
 
         self.mis_personnel_combo = _wide(MultiSelectComboBox())
         self.mis_personnel_combo.set_items(choices.MIS_PERSONNEL)
-        if self._default_mis_personnel in choices.MIS_PERSONNEL:
-            self.mis_personnel_combo.set_checked_items([self._default_mis_personnel])
 
         self.problem_edit = _short_text_edit()
         self.findings_edit = _short_text_edit()
@@ -184,9 +178,9 @@ class EntryForm(QWidget):
     # ---- lookups ----
 
     def reload_lookups(self):
-        run_async(self.api.brands, on_success=self._on_brands_loaded)
-        run_async(self.api.area_managers, on_success=self.area_manager_combo.set_items)
-        run_async(self.api.reported_by, "", on_success=self.reported_by_combo.set_items)
+        run_async(self.client.brands, on_success=self._on_brands_loaded)
+        run_async(self.client.area_managers, on_success=self.area_manager_combo.set_items)
+        run_async(self.client.reported_by, "", on_success=self.reported_by_combo.set_items)
 
     def _on_brands_loaded(self, brands: list[str]):
         current = self.brand_combo.currentText()
@@ -213,7 +207,7 @@ class EntryForm(QWidget):
             self.store_department_combo.set_items([])
             return
         run_async(
-            self.api.locations,
+            self.client.locations,
             location_type,
             brand,
             on_success=self.store_department_combo.set_items,
@@ -350,7 +344,7 @@ class EntryForm(QWidget):
         self.save_button.setEnabled(False)
         if self._entry_id is None:
             run_async(
-                self.api.create_entry,
+                self.client.create_entry,
                 payload,
                 on_success=self._on_save_success,
                 on_error=self._on_save_error,
@@ -358,7 +352,7 @@ class EntryForm(QWidget):
         else:
             payload["version"] = self._version
             run_async(
-                self.api.update_entry,
+                self.client.update_entry,
                 self._entry_id,
                 payload,
                 on_success=self._on_save_success,
