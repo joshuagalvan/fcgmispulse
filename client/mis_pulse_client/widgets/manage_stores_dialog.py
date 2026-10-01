@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..async_utils import run_async
+from .wheel_guard import no_wheel_unless_focused
 
 _INACTIVE_ROLE = Qt.UserRole
 _ID_ROLE = Qt.UserRole + 1
@@ -39,6 +40,7 @@ class _LookupManagerPanel(QWidget):
             brand_row.addWidget(QLabel("Brand:"))
             self.brand_combo = QComboBox()
             self.brand_combo.setMinimumWidth(260)
+            no_wheel_unless_focused(self.brand_combo)
             self.brand_combo.currentTextChanged.connect(self._on_brand_changed)
             brand_row.addWidget(self.brand_combo)
             brand_row.addStretch(1)

@@ -11,6 +11,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from .wheel_guard import no_wheel_unless_focused
+
 
 class TimePickerEdit(QWidget):
     """A QTimeEdit (still directly typeable/spinnable, unchanged) plus a
@@ -23,6 +25,7 @@ class TimePickerEdit(QWidget):
         policy = self.time_edit.sizePolicy()
         policy.setHorizontalPolicy(QSizePolicy.Expanding)
         self.time_edit.setSizePolicy(policy)
+        no_wheel_unless_focused(self.time_edit)
 
         self.picker_button = QToolButton()
         self.picker_button.setText("▼")

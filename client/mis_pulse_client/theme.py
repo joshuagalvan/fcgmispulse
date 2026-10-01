@@ -98,7 +98,6 @@ QTabWidget::pane {{
     border: 1px solid {BORDER};
     border-radius: 10px;
     background: {CARD};
-    top: -1px;
 }}
 
 QTabBar {{

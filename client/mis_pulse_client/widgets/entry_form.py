@@ -25,6 +25,7 @@ from ..theme import TEXT
 from .autocomplete_combobox import AutocompleteComboBox
 from .multi_select_combobox import MultiSelectComboBox
 from .time_picker_edit import TimePickerEdit
+from .wheel_guard import no_wheel_unless_focused
 
 _FIELD_MIN_WIDTH = 380
 
@@ -45,6 +46,10 @@ def _wide(widget):
     policy = widget.sizePolicy()
     policy.setHorizontalPolicy(QSizePolicy.Expanding)
     widget.setSizePolicy(policy)
+    # Scrolling the page past a combo/date/time field would otherwise
+    # silently change whatever value it's set to -- only let the wheel
+    # act once it's actually focused.
+    no_wheel_unless_focused(widget)
     return widget
 
 
