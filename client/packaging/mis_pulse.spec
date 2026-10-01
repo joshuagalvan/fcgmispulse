@@ -17,7 +17,7 @@ for pkg in ["PySide6"]:
     hiddenimports += pkg_hidden
 
 a = Analysis(
-    [os.path.join(CLIENT_DIR, "mis_pulse_client", "main.py")],
+    [os.path.join(CLIENT_DIR, "run_app.py")],
     pathex=[CLIENT_DIR],
     binaries=binaries,
     datas=datas,
