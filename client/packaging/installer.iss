@@ -3,7 +3,11 @@
 ; Menu + Desktop shortcut and a normal Windows uninstaller entry.
 
 #define AppName "FCG MIS Pulse"
-#define AppVersion "0.1.0"
+; Overridden per release by the workflow (ISCC /DAppVersion=1.2.3, taken
+; from the pushed tag); this default is only used for untagged test builds.
+#ifndef AppVersion
+  #define AppVersion "0.1.0"
+#endif
 
 [Setup]
 AppName={#AppName}

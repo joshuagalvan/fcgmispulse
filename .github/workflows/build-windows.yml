@@ -1,9 +1,14 @@
 name: Build Windows Installer
 
+# Every push to main builds a test installer (downloadable as a workflow
+# artifact, which needs a GitHub login and expires). Pushing a version tag
+# (e.g. v1.0.0) also publishes it as a GitHub Release -- public, no login,
+# permanent -- which is what to share with other users.
 on:
   push:
     branches: [main]
-    paths:
+    tags: ["v*"]
+    paths:  # GitHub doesn't apply path filters to tag pushes, so tags always build
       - "client/**"
       - "shared/**"
       - ".github/workflows/build-windows.yml"
@@ -12,6 +17,8 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    permissions:
+      contents: write  # needed to create releases
     defaults:
       run:
         working-directory: client
@@ -33,7 +40,10 @@ jobs:
         run: pyinstaller packaging/mis_pulse.spec --noconfirm
 
       - name: Build installer with Inno Setup
-        run: '& "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" packaging\installer.iss'
+        run: |
+          $version = "0.1.0"
+          if ($env:GITHUB_REF -like "refs/tags/v*") { $version = $env:GITHUB_REF_NAME.Substring(1) }
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "/DAppVersion=$version" packaging\installer.iss
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
@@ -41,3 +51,10 @@ jobs:
           name: FCG-MIS-Pulse-Setup
           path: client/installer_output/*.exe
           if-no-files-found: error
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release create "$env:GITHUB_REF_NAME" "installer_output/FCG-MIS-Pulse-Setup.exe" --title "FCG MIS Pulse $env:GITHUB_REF_NAME" --generate-notes
