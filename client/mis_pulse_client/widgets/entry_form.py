@@ -1,6 +1,7 @@
 from PySide6.QtCore import QDate, Qt, QTime, Signal
 from PySide6.QtGui import QColor, QKeySequence, QShortcut, QTextCharFormat
 from PySide6.QtWidgets import (
+    QAbstractSpinBox,
     QCheckBox,
     QComboBox,
     QDateEdit,
@@ -25,7 +26,7 @@ from ..theme import TEXT
 from .autocomplete_combobox import AutocompleteComboBox
 from .multi_select_combobox import MultiSelectComboBox
 from .time_picker_edit import TimePickerEdit
-from .wheel_guard import no_wheel_unless_focused
+from .wheel_guard import block_wheel
 
 _FIELD_MIN_WIDTH = 380
 
@@ -46,10 +47,8 @@ def _wide(widget):
     policy = widget.sizePolicy()
     policy.setHorizontalPolicy(QSizePolicy.Expanding)
     widget.setSizePolicy(policy)
-    # Scrolling the page past a combo/date/time field would otherwise
-    # silently change whatever value it's set to -- only let the wheel
-    # act once it's actually focused.
-    no_wheel_unless_focused(widget)
+    if isinstance(widget, (QComboBox, QAbstractSpinBox)):
+        block_wheel(widget)
     return widget
 
 

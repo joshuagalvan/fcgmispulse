@@ -1,26 +1,20 @@
-from PySide6.QtCore import QEvent, QObject
+from PySide6.QtCore import QEvent, QObject, Qt
 
 
-class _WheelGuard(QObject):
-    """QComboBox/QDateEdit/QTimeEdit/QSpinBox all change their value on a
-    bare mouse-wheel scroll by default, even without focus -- so scrolling
-    the page past one of these fields silently changes whatever it's set
-    to instead of just scrolling by. Only let the wheel act once the field
-    actually has focus (i.e. was clicked into first), same as most modern
-    forms; otherwise let the event bubble up so the page scrolls instead."""
-
+class _WheelBlocker(QObject):
     def eventFilter(self, obj, event):
-        if event.type() == QEvent.Type.Wheel and not obj.hasFocus():
-            event.ignore()
+        if event.type() == QEvent.Type.Wheel:
+            event.ignore()  # filtered *and* ignored: Qt hands it to the parent, so the page scrolls
             return True
         return super().eventFilter(obj, event)
 
 
-_guard = _WheelGuard()
+_blocker = _WheelBlocker()
 
 
-def no_wheel_unless_focused(widget):
-    # QComboBox/QDateEdit/QTimeEdit already accept click-to-focus by
-    # default (StrongFocus), so no focus-policy change is needed here.
-    widget.installEventFilter(_guard)
+def block_wheel(widget):
+    """Stop the mouse wheel changing a combo/date/time field's value; scroll the page instead."""
+    # Default on Windows is WheelFocus, which grabs focus on scroll before any event filter runs.
+    widget.setFocusPolicy(Qt.StrongFocus)
+    widget.installEventFilter(_blocker)
     return widget

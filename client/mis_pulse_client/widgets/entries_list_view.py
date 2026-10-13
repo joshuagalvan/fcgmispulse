@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 from .. import choices
 from ..async_utils import run_async
 from ..models.entries_table_model import EntriesTableModel
-from .wheel_guard import no_wheel_unless_focused
+from .wheel_guard import block_wheel
 
 
 def _recent_months(count: int = 14) -> list[tuple[str, str]]:
@@ -52,7 +52,7 @@ class EntriesListView(QWidget):
         self.task_filter_combo = QComboBox()
         self.task_filter_combo.addItems(["All statuses"] + choices.TASK)
         self.task_filter_combo.currentIndexChanged.connect(self.refresh)
-        no_wheel_unless_focused(self.task_filter_combo)
+        block_wheel(self.task_filter_combo)
 
         self.refresh_button = QPushButton("Search")
         self.refresh_button.clicked.connect(self.refresh)
@@ -83,7 +83,7 @@ class EntriesListView(QWidget):
         self.export_month_combo = QComboBox()
         for value, label in _recent_months():
             self.export_month_combo.addItem(label, value)
-        no_wheel_unless_focused(self.export_month_combo)
+        block_wheel(self.export_month_combo)
         self.export_button = QPushButton("Export to Excel")
         self.export_button.setObjectName("primaryButton")
         self.export_button.clicked.connect(self._export)
